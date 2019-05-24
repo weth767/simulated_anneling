@@ -31,17 +31,39 @@ alocacao_inicial <- function(solucao, nhorarios, salas, turmas){
                         else if(turmas[[k]][2] == 2){
                             #aloca o primeiro horario
                             solucao[i,j] <- turmas[[k]][1]
-                            #aloca o segundo horario
-                            solucao[i + 1,j] <- turmas[[k]][1]
+                            # verifica se cabe a aula
+                            if(i + 1 <= nhorarios){
+                                 #aloca o segundo horario
+                                solucao[i + 1,j] <- turmas[[k]][1]
+                            }
+                            # senão cabe, não insere a turma, entretanto aplica penalidade pelo número de aulas que não 
+                            # puderam ser inseridas
+                            else{
+                                penalidade <- penalidade + 300
+                            } 
                         }
                         #caso precise alocar tres horario
                         else if(turmas[[k]][2] == 3){
                             #aloca o primeiro
                             solucao[i,j] <- turmas[[k]][1]
-                            #o segundo
-                            solucao[i + 1, j] <- turmas[[k]][1]
-                            #e o terceiro horario
-                            solucao[i + 2, j] <- turmas[[k]][1]
+                            # verifica se cabe a aula
+                            if(i + 1 <= nhorarios){
+                                 #aloca o segundo horario
+                                solucao[i + 1,j] <- turmas[[k]][1]
+                            }
+                            # senão cabe, aumenta a penalidade
+                            else{
+                                penalidade <- penalidade + 300
+                            }
+                            # verifica da mesma forma, se cabe a aula naquele horário
+                            if(i + 2 <= nhorarios){
+                                #e o terceiro horario
+                                solucao[i + 2, j] <- turmas[[k]][1]
+                            }
+                            # da mesma forma, se não couber, aumenta a penalidade
+                            else{
+                                penalidade <- penalidade + 300
+                            } 
                         }
                         #coloca que a turma ja foi alocada com seus horarios
                         turmas[[k]][4] <- TRUE
@@ -64,7 +86,7 @@ simulated_anneling <- function(tinicial, tfinal, alpha, samax, nhorarios, nsalas
     solucao_atual <- alocacao_inicial(solucao_atual, nhorarios, salas, turmas)[[2]]
     print(solucao_atual)
     while(FALSE){
-
+        
     }
 }
 #funcao para inserir as informacoes da turma em uma lista
