@@ -77,17 +77,134 @@ alocacao_inicial <- function(solucao, nhorarios, salas, turmas){
     return (r)
 }
 
-funcao_objetiva <- function(solucao,nhorarios,turmas, salas){
-    
-}
-#funcao para realizar o simulated anneling
-simulated_anneling <- function(tinicial, tfinal, alpha, samax, nhorarios, nsalas, nturmas){
-    solucao_atual <- matrix(NA, nhorarios, nsalas)
-    solucao_atual <- alocacao_inicial(solucao_atual, nhorarios, salas, turmas)[[2]]
-    print(solucao_atual)
-    while(FALSE){
-        
+# função para gerir vizinhos novos formatos da matriz de alocação a fim de encontrar novos vizinhos possíveis
+estrutura_vizinhanca <- function(solucao, nhorarios, salas, turmas){
+    # guarda a matriz solução
+    matriz_vizinhanca <- solucao
+    # primeiramente verifica se trocará linha ou coluna
+    verifica_troca <- sample(0:1,1)
+    # variaives para verificar a quantidade de linhas e colunas
+    linhas <- nhorarios
+    colunas <- length(salas)
+    # variaveis para verificar qual das duas serão trocadas
+    linha <- -1
+    coluna <- -1
+    # instancia o vetor de trocas
+    vetor_troca <- vector()
+    # caso o número aleatório gerado for 0, troca linha, caso for 1, troca coluna
+    if(verifica_troca == 0){
+        # agora busca uma linha aleatória entre as linhas possíveis
+        linha <- sample(1 : linhas, 1)
+        # gera um vetor de valores aleatorios dentro so possíveis pela quantidade de linhas e sem se repetir
+        vetor_troca <- sample(1 : linhas, linhas, replace = FALSE)
     }
+    else if(verifica_troca == 1){
+        # agora busca uma coluna aleátorio dentre as colunas possíveis
+        coluna <- sample(1 : colunas, 1)
+        # preenche o vetor de valores aleatórios dentro dos possíveis na quantidade de colunas
+        vetor_troca <- sample(1 : colunas, colunas, replace = FALSE)
+    }
+    linha_coluna_solucao <- vector()
+    # verifica se linha ou coluna foi selecionada para troca
+    if(linha != -1){
+        # caso a linha tenha sido preenchdida, pega a linha especifica da matriz
+        linha_coluna_solucao <- solucao[linha,]
+        # agora realiza a troca
+        linha_coluna_solucao <- linha_coluna_solucao[vetor_troca]
+        # salva na matriz solução
+        matriz_vizinhanca[linha,] <- linha_coluna_solucao
+    }
+    else if(coluna != -1){
+        # caso a coluna tenha sido preenchdida, pega a coluna especifica da matriz
+        linha_coluna_solucao <- solucao[,coluna]
+        # agora realiza a troca
+        linha_coluna_solucao <- linha_coluna_solucao[vetor_troca]
+        # salva na matriz solução
+        matriz_vizinhanca[,coluna] <- linha_coluna_solucao
+    }
+    # retorna a matriz modificada
+    return (matriz_vizinhanca)
+}
+
+# método para executar a função objetiva, que avalia a penalidade e a retorna para ser refinada pelo SA
+funcao_objetiva <- function(solucao,nhorarios, salas, turmas){
+    penalidade <- 0
+    #3 for's para varrer os horarios, salas e turmas
+    for(i in 1 : nhorarios){
+        for(j in 1 : length(salas)){
+            for(k in 1 : length(turmas)){
+                # verifica as penalidades da alocação presente da turma
+                if(salas[j] > turmas[[k]][3]){
+                    #calcula a penalidade 
+                    penalidade <- penalidade + (salas[j] - turmas[[k]][3]) * 0.02
+                }
+                # caso a capacidade da sala for menor que a quantidade de alunos
+                else{
+                    # penaliza severamente a alocação
+                    penalidade <- penalidade + (turmas[[k]][3] - salas[j]) * 300
+                }
+            }
+        }
+    }
+    # no final retorna a penalidade da alocação
+    return (penalidade)
+}
+#funcao para realizar o simulated anneling de fato, recebe por parametro a temperatura de inicio, a temperatura de parada
+# a quantidade de vizinhos máximos a gerar, e as variaveis de tamanho da matriz
+simulated_anneling <- function(tinicial, tfinal, alpha, samax, nhorarios, nsalas, nturmas){
+    # instancia a matriz da solução inicial
+    solucao_atual <- matrix(NA, nhorarios, nsalas)
+    # aloca valores aleatórios de para a solução atual, e a guarda também como a melhor até o momento
+    solucao_atual <- alocacao_inicial(solucao_atual, nhorarios, salas, turmas)[[2]]
+    # guarda sua penalidade como a atual e também a melhor
+    penalidade_atual <- funcao_objetiva(solucao_atual, nhorarios, salas, turmas)
+    #guarda então os resultados da primeira alocação como a melhor solução até o momento
+    solucao_melhor <- solucao_atual
+    penalidade_menor <- penalidade_atual
+    # inicia a temperatura com o valor da temperatura inicial
+    temperatura <- tinicial
+    # executa um while até a temperatura ser menor que a temperatura de parada
+    while(temperatura > tfinal){
+        # agora um laço for para calcular a quantidade de vizinhos de acordo com o SAMAX
+        for(i in 1 : samax){
+            # usa a função de estrutura de vizinhança para gerar novas possibilidades de vizinhos
+            vizinho <- estrutura_vizinhanca(solucao_atual, nhorarios, salas, turmas)
+            # pega o valor da função objetiva do vizinho gerado
+            penalidade_vizinho <- funcao_objetiva(vizinho, nhorarios, salas, turmas)
+            # calcula o delta entre o vizinho e a solução anterior
+            delta <- penalidade_vizinho - penalidade_atual
+            # verifica se o delta for menor que zera, quer dizr que o vizinho tem uma penalidade melhor que a atual
+            if(delta < 0){
+                # assim atualiza a solução atual e a penalidade atual
+                solucao_atual <- vizinho
+                penalidade_atual <- penalidade_vizinho
+                # verifica também se o vizinho encontrado, é o melhor de todos
+                if(vizinho < penalidade_menor){
+                    # atualiza também como melhor de todos, solução e a penalidade
+                    solucao_melhor <- vizinho
+                    penalidade_menor <- penalidade_vizinho
+                }
+            }
+            # senão for negativo o delta, verifica o criterio de Boltzman para validar se pode aceita-la como uma possível solução ainda
+            else{
+                # pega a probabilidade a partir da forma (euler^(-delta/temperatura))
+				probabilidade <- exp(-delta/temperatura)
+                # pega um valor aleatorio para verificar a probabilidade gerada anteriormente
+				valor_aleatorio <- runif(1,0,1)
+                # se o valor gerado for menor ou igual a probabilidade, quer dizer que a probabilidade foi aceita 
+				if(valor_aleatorio <= probabilidade){
+					# então como a probabilidade de ser aceita uma solução pior foi aceita, atualiza os valores
+                    solucao_atual <- vizinho
+                    penalidade_atual <- penalidade_vizinho
+				}
+			}
+        }
+        # atualiza a temperatura
+        temperatura <- alpha * temperatura
+    }
+    # retorna no final a melhor solução e a penalidade menor
+    r <- list(penalidade_menor, solucao_melhor)
+    return (r)
 }
 #funcao para inserir as informacoes da turma em uma lista
 preenche_list_turmas <- function(vetor_aulas, vetor_alunos, turmas){
@@ -112,9 +229,9 @@ preenche_list_turmas <- function(vetor_aulas, vetor_alunos, turmas){
     return(list_turmas)
 }
 
-nhorarios <- 5
-nsalas <- 5
-nturmas <- 10
+nhorarios <- 8
+nsalas <- 6
+nturmas <- 25
 solucao_melhor <- NA
 penalidade_menor <- NA
 
@@ -126,4 +243,4 @@ aulas <- sample(x = 1:3, size = nturmas, replace = TRUE)
 alunos <- sample(x =  10:60, size = nturmas, replace = TRUE)
 # recebe o vetor final de turmas com as informações da turma, nome, quantidade de aulas e de alunos
 turmas <- preenche_list_turmas(aulas, alunos, nturmas)
-simulated_anneling(100, 10, 0.99, 5, nhorarios, nsalas, nturmas)
+print(simulated_anneling(100, 10, 0.99, 5, nhorarios, nsalas, nturmas))
