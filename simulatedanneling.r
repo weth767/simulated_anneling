@@ -34,7 +34,7 @@ alocacao_inicial <- function(solucao, nhorarios, salas, turmas){
                             # verifica se cabe a aula
                             if(i + 1 <= nhorarios){
                                  #aloca o segundo horario
-                                solucao[i + 1,j] <- turmas[[k]][1]
+                                solucao[i + 1, j] <- turmas[[k]][1]
                             }
                             # senão cabe, não insere a turma, entretanto aplica penalidade pelo número de aulas que não 
                             # puderam ser inseridas
@@ -134,14 +134,18 @@ funcao_objetiva <- function(solucao,nhorarios, salas, turmas){
         for(j in 1 : length(salas)){
             for(k in 1 : length(turmas)){
                 # verifica as penalidades da alocação presente da turma
-                if(salas[j] > turmas[[k]][3]){
-                    #calcula a penalidade 
-                    penalidade <- penalidade + (salas[j] - turmas[[k]][3]) * 0.02
-                }
-                # caso a capacidade da sala for menor que a quantidade de alunos
-                else{
-                    # penaliza severamente a alocação
-                    penalidade <- penalidade + (turmas[[k]][3] - salas[j]) * 300
+                if(!(is.na(solucao[i,j]))){
+                    if(solucao[i,j] == turmas[[k]][1]){
+                        if(salas[j] > turmas[[k]][3]){
+                        #calcula a penalidade 
+                        penalidade <- penalidade + (salas[j] - turmas[[k]][3]) * 0.02
+                        }
+                        # caso a capacidade da sala for menor que a quantidade de alunos
+                        else{
+                            # penaliza severamente a alocação
+                            penalidade <- penalidade + (turmas[[k]][3] - salas[j]) * 300
+                        }
+                    }
                 }
             }
         }
@@ -161,6 +165,8 @@ simulated_anneling <- function(tinicial, tfinal, alpha, samax, nhorarios, nsalas
     #guarda então os resultados da primeira alocação como a melhor solução até o momento
     solucao_melhor <- solucao_atual
     penalidade_menor <- penalidade_atual
+    # guarda as soluções
+    Y <- c(penalidade_atual)
     # inicia a temperatura com o valor da temperatura inicial
     temperatura <- tinicial
     # executa um while até a temperatura ser menor que a temperatura de parada
@@ -179,7 +185,7 @@ simulated_anneling <- function(tinicial, tfinal, alpha, samax, nhorarios, nsalas
                 solucao_atual <- vizinho
                 penalidade_atual <- penalidade_vizinho
                 # verifica também se o vizinho encontrado, é o melhor de todos
-                if(vizinho < penalidade_menor){
+                if(penalidade_vizinho < penalidade_menor){
                     # atualiza também como melhor de todos, solução e a penalidade
                     solucao_melhor <- vizinho
                     penalidade_menor <- penalidade_vizinho
@@ -198,10 +204,16 @@ simulated_anneling <- function(tinicial, tfinal, alpha, samax, nhorarios, nsalas
                     penalidade_atual <- penalidade_vizinho
 				}
 			}
+            # Atualiza os vetores para plot do grafico
+			Y <- c(Y, penalidade_atual)
         }
         # atualiza a temperatura
         temperatura <- alpha * temperatura
     }
+    # plota a variação de resultados 
+    png('evolucao-sa.png', width=1600)
+	plot(1:length(Y), Y, type='l', col='red', main='Evolucao do SA no tempo', xlab='Iteracao', ylab='Custo')
+	dev.off()
     # retorna no final a melhor solução e a penalidade menor
     r <- list(penalidade_menor, solucao_melhor)
     return (r)
@@ -230,7 +242,7 @@ preenche_list_turmas <- function(vetor_aulas, vetor_alunos, turmas){
 }
 
 nhorarios <- 8
-nsalas <- 6
+nsalas <- 8
 nturmas <- 25
 solucao_melhor <- NA
 penalidade_menor <- NA
@@ -243,4 +255,4 @@ aulas <- sample(x = 1:3, size = nturmas, replace = TRUE)
 alunos <- sample(x =  10:60, size = nturmas, replace = TRUE)
 # recebe o vetor final de turmas com as informações da turma, nome, quantidade de aulas e de alunos
 turmas <- preenche_list_turmas(aulas, alunos, nturmas)
-print(simulated_anneling(100, 10, 0.99, 5, nhorarios, nsalas, nturmas))
+print(simulated_anneling(1000, 10, 0.99, 5, nhorarios, nsalas, nturmas))
