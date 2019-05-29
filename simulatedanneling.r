@@ -78,50 +78,38 @@ alocacao_inicial <- function(solucao, nhorarios, salas, turmas){
 }
 
 # função para gerir vizinhos novos formatos da matriz de alocação a fim de encontrar novos vizinhos possíveis
-estrutura_vizinhanca <- function(solucao, nhorarios, salas, turmas){
+estrutura_vizinhanca_linha <- function(solucao, nhorarios, salas, turmas){
     # guarda a matriz solução
     matriz_vizinhanca <- solucao
-    # primeiramente verifica se trocará linha ou coluna
-    verifica_troca <- sample(0:1,1)
     # variaives para verificar a quantidade de linhas e colunas
     linhas <- nhorarios
     colunas <- length(salas)
-    # variaveis para verificar qual das duas serão trocadas
-    linha <- -1
-    coluna <- -1
-    # instancia o vetor de trocas
-    vetor_troca <- vector()
-    # caso o número aleatório gerado for 0, troca linha, caso for 1, troca coluna
-    if(verifica_troca == 0){
-        # agora busca uma linha aleatória entre as linhas possíveis
-        linha <- sample(1 : linhas, 1)
-        # gera um vetor de valores aleatorios dentro so possíveis pela quantidade de linhas e sem se repetir
-        vetor_troca <- sample(1 : linhas, linhas, replace = FALSE)
-    }
-    else if(verifica_troca == 1){
-        # agora busca uma coluna aleátorio dentre as colunas possíveis
-        coluna <- sample(1 : colunas, 1)
-        # preenche o vetor de valores aleatórios dentro dos possíveis na quantidade de colunas
-        vetor_troca <- sample(1 : colunas, colunas, replace = FALSE)
-    }
-    linha_coluna_solucao <- vector()
+    # agora busca uma linha aleatória entre as linhas possíveis
+    linha <- sample(1 : linhas, 1)
     # verifica se linha ou coluna foi selecionada para troca
-    if(linha != -1){
-        # caso a linha tenha sido preenchdida, pega a linha especifica da matriz
-        linha_coluna_solucao <- solucao[linha,]
-        # agora realiza a troca
-        linha_coluna_solucao <- linha_coluna_solucao[vetor_troca]
-        # salva na matriz solução
-        matriz_vizinhanca[linha,] <- linha_coluna_solucao
-    }
-    else if(coluna != -1){
-        # caso a coluna tenha sido preenchdida, pega a coluna especifica da matriz
-        linha_coluna_solucao <- solucao[,coluna]
-        # agora realiza a troca
-        linha_coluna_solucao <- linha_coluna_solucao[vetor_troca]
-        # salva na matriz solução
-        matriz_vizinhanca[,coluna] <- linha_coluna_solucao
-    }
+    # caso a linha tenha sido preenchdida, pega a linha especifica da matriz
+    linha_solucao <- matriz_vizinhanca[linha,]
+    troca <- sample(1 : colunas, colunas, replace = FALSE)
+    linha_solucao <- linha_solucao[troca]
+    matriz_vizinhanca[linha,] <- linha_solucao
+    # retorna a matriz modificada
+    return (matriz_vizinhanca)
+}
+
+estrutura_vizinhanca_coluna <- function(solucao, nhorarios, salas, turmas){
+    # guarda a matriz solução
+    matriz_vizinhanca <- solucao
+    # variaives para verificar a quantidade de linhas e colunas
+    linhas <- nhorarios
+    colunas <- length(salas)
+    # agora busca uma coluna aleatória entre as colunas possíveis
+    coluna <- sample(1 : colunas, 1)
+    # verifica se coluna ou coluna foi selecionada para troca
+    # caso a coluna tenha sido preenchdida, pega a coluna especifica da matriz
+    coluna_solucao <- matriz_vizinhanca[,coluna]
+    troca <- sample(1 : linhas, linhas, replace = FALSE)
+    coluna_solucao <- coluna_solucao[troca]
+    matriz_vizinhanca[,coluna] <- coluna_solucao
     # retorna a matriz modificada
     return (matriz_vizinhanca)
 }
@@ -137,8 +125,8 @@ funcao_objetiva <- function(solucao,nhorarios, salas, turmas){
                 if(!(is.na(solucao[i,j]))){
                     if(solucao[i,j] == turmas[[k]][1]){
                         if(salas[j] > turmas[[k]][3]){
-                        #calcula a penalidade 
-                        penalidade <- penalidade + (salas[j] - turmas[[k]][3]) * 0.02
+                            #calcula a penalidade 
+                            penalidade <- penalidade + (salas[j] - turmas[[k]][3]) * 0.02
                         }
                         # caso a capacidade da sala for menor que a quantidade de alunos
                         else{
@@ -173,8 +161,15 @@ simulated_anneling <- function(tinicial, tfinal, alpha, samax, nhorarios, nsalas
     while(temperatura > tfinal){
         # agora um laço for para calcular a quantidade de vizinhos de acordo com o SAMAX
         for(i in 1 : samax){
-            # usa a função de estrutura de vizinhança para gerar novas possibilidades de vizinhos
-            vizinho <- estrutura_vizinhanca(solucao_atual, nhorarios, salas, turmas)
+            verifica_troca <- sample(0:1,1)
+            if(verifica_troca == 0){
+                # usa a função de estrutura de vizinhança para gerar novas possibilidades de vizinhos
+                vizinho <- estrutura_vizinhanca_linha(solucao_atual, nhorarios, salas, turmas)
+            }
+            else if(verifica_troca == 1){
+                # usa a função de estrutura de vizinhança para gerar novas possibilidades de vizinhos
+                vizinho <- estrutura_vizinhanca_coluna(solucao_atual, nhorarios, salas, turmas)
+            }
             # pega o valor da função objetiva do vizinho gerado
             penalidade_vizinho <- funcao_objetiva(vizinho, nhorarios, salas, turmas)
             # calcula o delta entre o vizinho e a solução anterior
@@ -215,7 +210,7 @@ simulated_anneling <- function(tinicial, tfinal, alpha, samax, nhorarios, nsalas
 	plot(1:length(Y), Y, type='l', col='red', main='Evolucao do SA no tempo', xlab='Iteracao', ylab='Custo')
 	dev.off()
     # retorna no final a melhor solução e a penalidade menor
-    r <- list(penalidade_menor, solucao_melhor)
+    r <- list(solucao_melhor,penalidade_menor)
     return (r)
 }
 #funcao para inserir as informacoes da turma em uma lista
@@ -241,8 +236,8 @@ preenche_list_turmas <- function(vetor_aulas, vetor_alunos, turmas){
     return(list_turmas)
 }
 
-nhorarios <- 8
-nsalas <- 8
+nhorarios <- 6
+nsalas <- 5
 nturmas <- 25
 solucao_melhor <- NA
 penalidade_menor <- NA
