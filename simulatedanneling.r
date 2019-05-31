@@ -11,7 +11,7 @@ alocacao_inicial <- function(solucao, nhorarios, salas, turmas){
                 #se nao foi alocado turma para a sala num determinado horario
                 if(is.na(solucao[i,j])){
                     #caso a turma nao tenha sido alocada (POSICAO 4 indica que ainda nao teve sala alocada para a turma)
-                    if(turmas[[4]][k] == FALSE){
+                    if(identical(turmas[[4]][k],FALSE)){
                         #verifica se a sala tem capacidade para a turma
                         if(salas[[2]][j] > turmas[[3]][k]){
                             #calcula a penalidade 
@@ -42,7 +42,7 @@ alocacao_inicial <- function(solucao, nhorarios, salas, turmas){
                             #aloca o primeiro horario
                             solucao[i,j] <- turmas[[1]][k]
                             # um for agora para alocar as outras aulas
-                            for(z in i + 1 : i + 3){
+                            for(z in (i + 1) : (i + 3)){
                                  # verifica se cabe a aula
                                 if(z <= nhorarios){
                                     solucao[z,j] <- turmas[[1]][k]
@@ -58,7 +58,7 @@ alocacao_inicial <- function(solucao, nhorarios, salas, turmas){
                             #aloca o primeiro
                             solucao[i,j] <- turmas[[1]][k]
                            # um for agora para alocar as outras aulas
-                            for(z in i + 1 : i + 5){
+                            for(z in (i + 1) : (i + 5)){
                                  # verifica se cabe a aula
                                 if(z <= nhorarios){
                                     solucao[z,j] <- turmas[[1]][k]
@@ -73,7 +73,7 @@ alocacao_inicial <- function(solucao, nhorarios, salas, turmas){
                             #aloca o primeiro
                             solucao[i,j] <- turmas[[1]][k]
                             # um for agora para alocar as outras aulas
-                            for(z in i + 1 : i + 7){
+                            for(z in (i + 1) : (i + 7)){
                                  # verifica se cabe a aula
                                 if(z <= nhorarios){
                                     solucao[z,j] <- turmas[[1]][k]
@@ -243,7 +243,7 @@ salas <- list(id_salas,capacidades_salas)
 # faz o mesmo com as turmas(1 a 4 tecnico em computação, 11 a 14 técnico em eletrotecnica, 21 a 24 técnico em 
 # administração, 31 a 34 bacharel em administração, 41 a 44, bacharel em engenharia elétrica e 51 a 54, bacharel em computação)
 id_turmas <- c(1,2,3,4,11,12,13,14,21,22,23,24,31,32,33,34,41,42,43,44,51,52,53,54)
-qnt_aulas <- c(8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8)
+qnt_aulas <- c(4,4,6,8,2,4,6,6,8,4,2,2,4,6,6,8,4,6,4,4,2,4,6,8)
 qnt_alunos <- sample(20:60,length(id_turmas))
 estado_alocacao <- c(rep(FALSE,length(id_turmas)))
 #aulas_naoalocadas <- c(rep(NA,length(id_turmas)))
