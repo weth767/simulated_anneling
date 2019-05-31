@@ -3,11 +3,11 @@ alocacao_inicial <- function(solucao, nhorarios, salas, turmas){
     #variavel para guardar a penalidade
     penalidade <- 0
     #varre a quantidade de horarios disponivel
-    for(i in 1 : nhorarios){
+    for(k in 1 : length(turmas[[1]])){
         #varre a quantidade de salas disponiveis
-        for(j in 1 : length(salas[[1]])){
+        for(i in 1 : nhorarios){
             #varre a quantidade de turmas
-            for(k in 1 : length(turmas[[1]])){
+            for(j in 1 : length(salas[[1]])){
                 #se nao foi alocado turma para a sala num determinado horario
                 if(is.na(solucao[i,j])){
                     #caso a turma nao tenha sido alocada (POSICAO 4 indica que ainda nao teve sala alocada para a turma)
@@ -20,7 +20,7 @@ alocacao_inicial <- function(solucao, nhorarios, salas, turmas){
                         #caso nao cabe a quantidade de alunos na sala
                         else{
                             #calcula uma penalidade maior
-                            penalidade <- penalidade + (turmas[[3]][k] - salas[[2]][j]) * 300
+                            penalidade <- penalidade + (turmas[[3]][k] - salas[[2]][j]) * 100
                         }
                         #caso so precise alocar um horario
                         if(turmas[[2]][k] == 2){
@@ -34,7 +34,7 @@ alocacao_inicial <- function(solucao, nhorarios, salas, turmas){
                             # senão cabe, não insere a turma, entretanto aplica penalidade pelo número de aulas que não 
                             # puderam ser inseridas
                             else{
-                                penalidade <- penalidade + 300
+                                penalidade <- penalidade + 100
                             }
                         }
                         #caso precise alocar quatros horarios de aula
@@ -49,7 +49,7 @@ alocacao_inicial <- function(solucao, nhorarios, salas, turmas){
                                 }
                                 # senão cabe, não insere a turma, entretanto aplica penalidade pelo número de aulas que não puderam ser inseridas
                                 else{
-                                    penalidade <- penalidade + 300
+                                    penalidade <- penalidade + 100
                                 }
                             }
                         }
@@ -65,7 +65,7 @@ alocacao_inicial <- function(solucao, nhorarios, salas, turmas){
                                 }
                                 # senão cabe, não insere a turma, entretanto aplica penalidade pelo número de aulas que não puderam ser inseridas
                                 else{
-                                    penalidade <- penalidade + 300
+                                    penalidade <- penalidade + 100
                                 }
                             }
                         }
@@ -169,8 +169,10 @@ simulated_anneling <- function(tinicial, tfinal, alpha, samax, nhorarios, salas,
     solucao_atual <- matrix(NA, nhorarios, nsalas)
     # aloca valores aleatórios de para a solução atual, e a guarda também como a melhor até o momento
     solucao_atual <- alocacao_inicial(solucao_atual, nhorarios, salas, turmas)
+    print(solucao_atual)
     # guarda sua penalidade como a atual e também a melhor
     penalidade_atual <- funcao_objetiva(solucao_atual, nhorarios, salas, turmas)
+    print(penalidade_atual)
     #guarda então os resultados da primeira alocação como a melhor solução até o momento
     solucao_melhor <- solucao_atual
     penalidade_menor <- penalidade_atual
@@ -243,7 +245,7 @@ salas <- list(id_salas,capacidades_salas)
 # faz o mesmo com as turmas(1 a 4 tecnico em computação, 11 a 14 técnico em eletrotecnica, 21 a 24 técnico em 
 # administração, 31 a 34 bacharel em administração, 41 a 44, bacharel em engenharia elétrica e 51 a 54, bacharel em computação)
 id_turmas <- c(1,2,3,4,11,12,13,14,21,22,23,24,31,32,33,34,41,42,43,44,51,52,53,54)
-qnt_aulas <- c(4,4,6,8,2,4,6,6,8,4,2,2,4,6,6,8,4,6,4,4,2,4,6,8)
+qnt_aulas <- c(4,4,2,4,2,4,6,6,4,4,2,2,4,6,6,2,4,6,4,4,2,4,6,4)
 qnt_alunos <- sample(20:60,length(id_turmas))
 estado_alocacao <- c(rep(FALSE,length(id_turmas)))
 #aulas_naoalocadas <- c(rep(NA,length(id_turmas)))
