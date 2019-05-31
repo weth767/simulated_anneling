@@ -226,8 +226,10 @@ simulated_anneling <- function(tinicial, tfinal, alpha, samax, nhorarios, salas,
         # atualiza a temperatura
         temperatura <- alpha * temperatura
     }
-    # plota a variação de resultados 
-    png('evolucao-sa.png', width=1600)
+    # plota a variação de resultados
+    nome <- paste('evolucao-sa.png_',penalidade_menor)
+    nome <-paste(nome,Sys.time()) 
+    png(nome, width=1600)
 	plot(1:length(Y), Y, type='l', col='red', main='Evolucao do SA no tempo', xlab='Iteracao', ylab='Custo')
 	dev.off()
     # retorna no final a melhor solução e a penalidade menor
