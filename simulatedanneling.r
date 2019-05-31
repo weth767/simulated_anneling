@@ -101,7 +101,7 @@ estrutura_vizinhanca_linha <- function(solucao, nhorarios, salas, turmas){
     matriz_vizinhanca <- solucao
     # variaives para verificar a quantidade de linhas e colunas
     linhas <- nhorarios
-    colunas <- length(salas)
+    colunas <- length(salas[[1]])
     # agora busca uma linha aleatória entre as linhas possíveis
     linha <- sample(1 : linhas, 1)
     # verifica se linha ou coluna foi selecionada para troca
@@ -119,7 +119,7 @@ estrutura_vizinhanca_coluna <- function(solucao, nhorarios, salas, turmas){
     matriz_vizinhanca <- solucao
     # variaives para verificar a quantidade de linhas e colunas
     linhas <- nhorarios
-    colunas <- length(salas[1])
+    colunas <- length(salas[[1]])
     # agora busca uma coluna aleatória entre as colunas possíveis
     coluna <- sample(1 : colunas, 1)
     # verifica se coluna ou coluna foi selecionada para troca
@@ -169,10 +169,8 @@ simulated_anneling <- function(tinicial, tfinal, alpha, samax, nhorarios, salas,
     solucao_atual <- matrix(NA, nhorarios, nsalas)
     # aloca valores aleatórios de para a solução atual, e a guarda também como a melhor até o momento
     solucao_atual <- alocacao_inicial(solucao_atual, nhorarios, salas, turmas)
-    print(solucao_atual)
     # guarda sua penalidade como a atual e também a melhor
     penalidade_atual <- funcao_objetiva(solucao_atual, nhorarios, salas, turmas)
-    print(penalidade_atual)
     #guarda então os resultados da primeira alocação como a melhor solução até o momento
     solucao_melhor <- solucao_atual
     penalidade_menor <- penalidade_atual
@@ -254,5 +252,3 @@ turmas <- list(id_turmas, qnt_aulas, qnt_alunos, estado_alocacao)
 
 nhorarios <- 10
 print(simulated_anneling(1000, 10, 0.99, 5, nhorarios, salas, turmas))
-#solucao <- matrix(NA, nhorarios, length(salas[[1]]))
-#print(alocacao_inicial(solucao, nhorarios, salas, turmas))
