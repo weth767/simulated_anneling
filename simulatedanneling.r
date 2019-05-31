@@ -5,76 +5,94 @@ alocacao_inicial <- function(solucao, nhorarios, salas, turmas){
     #varre a quantidade de horarios disponivel
     for(i in 1 : nhorarios){
         #varre a quantidade de salas disponiveis
-        for(j in 1 : length(salas)){
+        for(j in 1 : length(salas[[1]])){
             #varre a quantidade de turmas
-            for(k in 1 : length(turmas)){
+            for(k in 1 : length(turmas[[1]])){
                 #se nao foi alocado turma para a sala num determinado horario
                 if(is.na(solucao[i,j])){
                     #caso a turma nao tenha sido alocada (POSICAO 4 indica que ainda nao teve sala alocada para a turma)
-                    if(turmas[[k]][4] == 0){
+                    if(turmas[[4]][k] == FALSE){
                         #verifica se a sala tem capacidade para a turma
-                        if(salas[j] > turmas[[k]][3]){
+                        if(salas[[2]][j] > turmas[[3]][k]){
                             #calcula a penalidade 
-                            penalidade <- penalidade + (salas[j] - turmas[[k]][3]) * 0.02
+                            penalidade <- penalidade + (salas[[2]][j] - turmas[[3]][k]) * 0.02
                         }
                         #caso nao cabe a quantidade de alunos na sala
                         else{
                             #calcula uma penalidade maior
-                            penalidade <- penalidade + (turmas[[k]][3] - salas[j]) * 300
+                            penalidade <- penalidade + (turmas[[3]][k] - salas[[2]][j]) * 300
                         }
                         #caso so precise alocar um horario
-                        if(turmas[[k]][2] == 1){
-                            #aloca 1 horario para a turma
-                            solucao[i,j] <- turmas[[k]][1]
-                        }
-                        #caso precise alocar dois horario
-                        else if(turmas[[k]][2] == 2){
-                            #aloca o primeiro horario
-                            solucao[i,j] <- turmas[[k]][1]
+                        if(turmas[[2]][k] == 2){
+                           #aloca o primeiro horario
+                            solucao[i,j] <- turmas[[1]][k]
                             # verifica se cabe a aula
                             if(i + 1 <= nhorarios){
                                  #aloca o segundo horario
-                                solucao[i + 1, j] <- turmas[[k]][1]
+                                solucao[i + 1, j] <- turmas[[1]][k]
                             }
                             # senão cabe, não insere a turma, entretanto aplica penalidade pelo número de aulas que não 
                             # puderam ser inseridas
                             else{
                                 penalidade <- penalidade + 300
-                            } 
+                            }
                         }
-                        #caso precise alocar tres horario
-                        else if(turmas[[k]][2] == 3){
+                        #caso precise alocar quatros horarios de aula
+                        else if(turmas[[2]][k] == 4){
+                            #aloca o primeiro horario
+                            solucao[i,j] <- turmas[[1]][k]
+                            # um for agora para alocar as outras aulas
+                            for(z in i + 1 : i + 3){
+                                 # verifica se cabe a aula
+                                if(z <= nhorarios){
+                                    solucao[z,j] <- turmas[[1]][k]
+                                }
+                                # senão cabe, não insere a turma, entretanto aplica penalidade pelo número de aulas que não puderam ser inseridas
+                                else{
+                                    penalidade <- penalidade + 300
+                                }
+                            }
+                        }
+                        #caso precise alocar seis horarios de aula
+                        else if(turmas[[2]][k] == 6){ 
                             #aloca o primeiro
-                            solucao[i,j] <- turmas[[k]][1]
-                            # verifica se cabe a aula
-                            if(i + 1 <= nhorarios){
-                                 #aloca o segundo horario
-                                solucao[i + 1,j] <- turmas[[k]][1]
+                            solucao[i,j] <- turmas[[1]][k]
+                           # um for agora para alocar as outras aulas
+                            for(z in i + 1 : i + 5){
+                                 # verifica se cabe a aula
+                                if(z <= nhorarios){
+                                    solucao[z,j] <- turmas[[1]][k]
+                                }
+                                # senão cabe, não insere a turma, entretanto aplica penalidade pelo número de aulas que não puderam ser inseridas
+                                else{
+                                    penalidade <- penalidade + 300
+                                }
                             }
-                            # senão cabe, aumenta a penalidade
-                            else{
-                                penalidade <- penalidade + 300
+                        }
+                        else if(turmas[[2]][k] == 8){
+                            #aloca o primeiro
+                            solucao[i,j] <- turmas[[1]][k]
+                            # um for agora para alocar as outras aulas
+                            for(z in i + 1 : i + 7){
+                                 # verifica se cabe a aula
+                                if(z <= nhorarios){
+                                    solucao[z,j] <- turmas[[1]][k]
+                                }
+                                # senão cabe, não insere a turma, entretanto aplica penalidade pelo número de aulas que não puderam ser inseridas
+                                else{
+                                    penalidade <- penalidade + 300
+                                }
                             }
-                            # verifica da mesma forma, se cabe a aula naquele horário
-                            if(i + 2 <= nhorarios){
-                                #e o terceiro horario
-                                solucao[i + 2, j] <- turmas[[k]][1]
-                            }
-                            # da mesma forma, se não couber, aumenta a penalidade
-                            else{
-                                penalidade <- penalidade + 300
-                            } 
                         }
                         #coloca que a turma ja foi alocada com seus horarios
-                        turmas[[k]][4] <- TRUE
+                        turmas[[4]][k] <- TRUE
                     }
                 }
             }
         }
     }
-    #retorna uma lista contendo a solucao inicial e a sua penalidade
-    r <- list(penalidade, solucao)
-    return (r)
+    # retorna a solucao inicial
+    return (solucao)
 }
 
 # função para gerir vizinhos novos formatos da matriz de alocação a fim de encontrar novos vizinhos possíveis
@@ -101,7 +119,7 @@ estrutura_vizinhanca_coluna <- function(solucao, nhorarios, salas, turmas){
     matriz_vizinhanca <- solucao
     # variaives para verificar a quantidade de linhas e colunas
     linhas <- nhorarios
-    colunas <- length(salas)
+    colunas <- length(salas[1])
     # agora busca uma coluna aleatória entre as colunas possíveis
     coluna <- sample(1 : colunas, 1)
     # verifica se coluna ou coluna foi selecionada para troca
@@ -119,19 +137,19 @@ funcao_objetiva <- function(solucao,nhorarios, salas, turmas){
     penalidade <- 0
     #3 for's para varrer os horarios, salas e turmas
     for(i in 1 : nhorarios){
-        for(j in 1 : length(salas)){
-            for(k in 1 : length(turmas)){
+        for(j in 1 : length(salas[[1]])){
+            for(k in 1 : length(turmas[[1]])){
                 # verifica as penalidades da alocação presente da turma
                 if(!(is.na(solucao[i,j]))){
-                    if(solucao[i,j] == turmas[[k]][1]){
-                        if(salas[j] > turmas[[k]][3]){
+                    if(solucao[i,j] == turmas[[1]][k]){
+                        if(salas[[2]][j] > turmas[[3]][k]){
                             #calcula a penalidade 
-                            penalidade <- penalidade + (salas[j] - turmas[[k]][3]) * 0.02
+                            penalidade <- penalidade + (salas[[2]][j] - turmas[[3]][k]) * 0.02
                         }
                         # caso a capacidade da sala for menor que a quantidade de alunos
                         else{
                             # penaliza severamente a alocação
-                            penalidade <- penalidade + (turmas[[k]][3] - salas[j]) * 300
+                            penalidade <- penalidade + (turmas[[3]][k] - salas[[2]][j]) * 300
                         }
                     }
                 }
@@ -143,11 +161,14 @@ funcao_objetiva <- function(solucao,nhorarios, salas, turmas){
 }
 #funcao para realizar o simulated anneling de fato, recebe por parametro a temperatura de inicio, a temperatura de parada
 # a quantidade de vizinhos máximos a gerar, e as variaveis de tamanho da matriz
-simulated_anneling <- function(tinicial, tfinal, alpha, samax, nhorarios, nsalas, nturmas){
+simulated_anneling <- function(tinicial, tfinal, alpha, samax, nhorarios, salas, turmas){
+    # pega o tamanho das listas
+    nsalas <- length(salas[[1]])
+    nturmas <- length(turmas[[1]])
     # instancia a matriz da solução inicial
     solucao_atual <- matrix(NA, nhorarios, nsalas)
     # aloca valores aleatórios de para a solução atual, e a guarda também como a melhor até o momento
-    solucao_atual <- alocacao_inicial(solucao_atual, nhorarios, salas, turmas)[[2]]
+    solucao_atual <- alocacao_inicial(solucao_atual, nhorarios, salas, turmas)
     # guarda sua penalidade como a atual e também a melhor
     penalidade_atual <- funcao_objetiva(solucao_atual, nhorarios, salas, turmas)
     #guarda então os resultados da primeira alocação como a melhor solução até o momento
@@ -213,41 +234,23 @@ simulated_anneling <- function(tinicial, tfinal, alpha, samax, nhorarios, nsalas
     r <- list(solucao_melhor,penalidade_menor)
     return (r)
 }
-#funcao para inserir as informacoes da turma em uma lista
-preenche_list_turmas <- function(vetor_aulas, vetor_alunos, turmas){
-    #declara a lista de turma
-    list_turmas <- list()
-    #for para varrer a quantidade de turmas
-    for(i in 1 : turmas){
-        #insere um vetor de 4 posicoes com NA
-        vetor_turma <- c(NA, 4)
-        #nome da turma  (ID da turma)
-        vetor_turma[1] <- i
-        #Quantidade de aulas da turma
-        vetor_turma[2] <- vetor_aulas[i]
-        #quantidade de alunos da turma
-        vetor_turma[3] <- vetor_alunos[i]
-        #identificador para saber se a turma foi alocada ou nao
-        vetor_turma[4] <- FALSE
-        #insere a turma na lista
-        list_turmas[[i]] <- vetor_turma
-    }
-    #retorna a lista de turmas
-    return(list_turmas)
-}
 
-nhorarios <- 6
-nsalas <- 5
-nturmas <- 25
-solucao_melhor <- NA
-penalidade_menor <- NA
+# instancia os vetores de id das salas e suas capacidades
+id_salas <- c(15,16,21,22,23,24,25,26,27,31,32,33,34,35,36,37,38,39)
+capacidades_salas <- c(44,81,57,55,33,34,41,82,44,40,35,33,23,31,36,41,64,40)
+# depois joga em uma lista para ser acessada facilmente no método do simulate anneling
+salas <- list(id_salas,capacidades_salas)
+# faz o mesmo com as turmas(1 a 4 tecnico em computação, 11 a 14 técnico em eletrotecnica, 21 a 24 técnico em 
+# administração, 31 a 34 bacharel em administração, 41 a 44, bacharel em engenharia elétrica e 51 a 54, bacharel em computação)
+id_turmas <- c(1,2,3,4,11,12,13,14,21,22,23,24,31,32,33,34,41,42,43,44,51,52,53,54)
+qnt_aulas <- c(8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8)
+qnt_alunos <- sample(20:60,length(id_turmas))
+estado_alocacao <- c(rep(FALSE,length(id_turmas)))
+#aulas_naoalocadas <- c(rep(NA,length(id_turmas)))
+# adiciona depois tudo na lista de turmas
+turmas <- list(id_turmas, qnt_aulas, qnt_alunos, estado_alocacao)
 
-# instancia o vetor de salas com suas capacidades
-salas <- sample(25:60, nsalas)
-# instancia o vetor da quantidade de aulas de cada turma
-aulas <- sample(x = 1:3, size = nturmas, replace = TRUE)
-# instancia o vetor com a quantidade de alunos da turma
-alunos <- sample(x =  10:60, size = nturmas, replace = TRUE)
-# recebe o vetor final de turmas com as informações da turma, nome, quantidade de aulas e de alunos
-turmas <- preenche_list_turmas(aulas, alunos, nturmas)
-print(simulated_anneling(1000, 10, 0.99, 5, nhorarios, nsalas, nturmas))
+nhorarios <- 10
+print(simulated_anneling(1000, 10, 0.99, 5, nhorarios, salas, turmas))
+#solucao <- matrix(NA, nhorarios, length(salas[[1]]))
+#print(alocacao_inicial(solucao, nhorarios, salas, turmas))
