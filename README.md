@@ -1,2 +1,2 @@
 # simulated_anneling
-A simple way to implements known method SA
+A simple way to implements known method SA using R
